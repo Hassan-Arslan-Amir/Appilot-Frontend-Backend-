@@ -464,6 +464,15 @@ export function renderSchedule(inputs) {
   ));
 }
 
+// Helper to get today's date in DD/MM/YYYY
+function getTodayDDMMYYYY() {
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const yyyy = today.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 export function transformData(data) {
   const transformed = [];
 
@@ -519,8 +528,22 @@ export function transformData(data) {
       // New input type for toggle and number of connections
       toggleAndInput: ["numberOfConnections"],
       // New input type for toggle and probability
-      toggleAndProbability: ["probability"],
+      toggleAndProbability: ["probability", "tweetsPerDay", "date"],
     };
+
+    // Special handling for toggleAndProbability: always set date to today if missing, empty, or not today
+    if (baseType === "toggleAndProbability") {
+      const today = getTodayDDMMYYYY();
+      if (
+        !inputItem.date ||
+        inputItem.date.trim() === "" ||
+        inputItem.date !== today
+      ) {
+        result["date"] = today;
+      } else {
+        result["date"] = inputItem.date;
+      }
+    }
 
     // Add properties based on input type
     if (baseType in typeProperties) {

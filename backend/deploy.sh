@@ -35,6 +35,7 @@ sudo systemctl reload nginx
 
 #tool for screenshots
 # weditor
+# run this command in the terminal: http://uiauto.dev/
 
 # run command
 # python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000

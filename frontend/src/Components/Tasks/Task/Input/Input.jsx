@@ -1,5 +1,4 @@
 // export default Input;
-
 import RightChevron from "../../../../assets/Icons/RightChevron";
 import GreyButton from "../../../Buttons/GreyButton";
 import classes from "./Input.module.css";
@@ -21,6 +20,18 @@ import Cross from "../../../../assets/svgs/Cross";
 import CustomChevronUp from "../../../../assets/svgs/ChevronUp";
 import CustomChevronDown from "../../../../assets/svgs/ChevronDown";
 
+// Helper to get today's date in DD/MM/YYYY
+function getTodayDDMMYYYY() {
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const yyyy = today.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+// Helper to check if a date string is today
+function isToday(dateStr) {
+  return dateStr === getTodayDDMMYYYY();
+}
 function Input(props) {
   const [inputs, setInputs] = useState(props.inputs ? props.inputs : null);
   const [inputsShowList, setInputsShowList] = useState([]);
@@ -343,6 +354,17 @@ function Input(props) {
   };
 
   function renderInputContent(el, index, InnerIndex) {
+    // For toggleAndProbability, always set date to today if toggle is on and date is not today
+    if (el.type === "toggleAndProbability" && el.input && !isToday(el.date)) {
+      setInputs((prevState) => {
+        const newInputs = { ...prevState };
+        newInputs.inputs[index].inputs[InnerIndex] = {
+          ...el,
+          date: getTodayDDMMYYYY(),
+        };
+        return newInputs;
+      });
+    }
     switch (el.type) {
       case "toggle":
         return (
@@ -1064,6 +1086,17 @@ function Input(props) {
           </div>
         );
       case "toggleAndProbability":
+        // Always set the date if not present
+        if (!el.date) {
+          setInputs((prevState) => {
+            const newInputs = { ...prevState };
+            newInputs.inputs[index].inputs[InnerIndex] = {
+              ...el,
+              date: getTodayDDMMYYYY(),
+            };
+            return newInputs;
+          });
+        }
         return (
           <div className={classes.Inputscontainer}>
             <ToggleInput
@@ -1073,20 +1106,69 @@ function Input(props) {
               InnerIndex={InnerIndex}
             />
             {el.input && (
-              <NumberInput
-                lable={"Probability:"}
-                onChange={(value) => {
-                  inputTextChangeHandler(
-                    index,
-                    InnerIndex,
-                    value,
-                    "probability"
-                  );
-                }}
-                min={1}
-                Value={el.probability}
-              />
+              <>
+                <div style={{ marginTop: 10 }}>
+                  <label style={{ fontWeight: 500, color: "#fff" }}>
+                    Date:
+                  </label>
+                  <input
+                    type="text"
+                    value={el.date || getTodayDDMMYYYY()}
+                    onChange={(e) => {
+                      inputTextChangeHandler(
+                        index,
+                        InnerIndex,
+                        e.target.value,
+                        "date"
+                      );
+                    }}
+                    readOnly={false}
+                    style={{
+                      marginLeft: 8,
+                      padding: 4,
+                      borderRadius: 4,
+                      border: "1px solid #000",
+                      width: 120,
+                      backgroundColor: "#000",
+                      color: "#fff",
+                    }}
+                  />
+                </div>
+                <NumberInput
+                  lable={"Probability:"}
+                  onChange={(value) => {
+                    inputTextChangeHandler(
+                      index,
+                      InnerIndex,
+                      value,
+                      "probability"
+                    );
+                  }}
+                  min={1}
+                  Value={el.probability}
+                />
+                <NumberInput
+                  lable={"Number of Tweets to Interact Daily:"}
+                  onChange={(value) => {
+                    inputTextChangeHandler(
+                      index,
+                      InnerIndex,
+                      value,
+                      "tweetsPerDay"
+                    );
+                  }}
+                  min={1}
+                  Value={el.tweetsPerDay}
+                />
+              </>
             )}
+            {/* Always render the date field (hidden) so it's sent to backend even if toggle is off */}
+            <input
+              type="hidden"
+              value={el.date || getTodayDDMMYYYY()}
+              readOnly
+              name="date"
+            />
           </div>
         );
 
